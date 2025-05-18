@@ -19,13 +19,14 @@ public class UserService {
   private final JwtService jwtService;
 
   public UserService(
-          UserRepository userRepository,
-          AuthenticationManager authenticationManager,
-          BCryptPasswordEncoder encoder, JwtService jwtService) {
+      UserRepository userRepository,
+      AuthenticationManager authenticationManager,
+      BCryptPasswordEncoder encoder,
+      JwtService jwtService) {
     this.userRepository = userRepository;
     this.authenticationManager = authenticationManager;
     this.encoder = encoder;
-      this.jwtService = jwtService;
+    this.jwtService = jwtService;
   }
 
   public User create(User user) {
@@ -35,18 +36,18 @@ public class UserService {
 
   /**
    * Cette fonction permet de vérifier si l'utilisateur est existant en base de données en utilisant
-   * la configuration dans la classe {@link SecurityConfig} utilisant la fonction {@link SecurityConfig#authProvider()}
+   * la configuration dans la classe {@link SecurityConfig} utilisant la fonction {@link
+   * SecurityConfig#authProvider()}
    *
    * @return
    */
   public String verify(User user) {
 
-    //utilise la config definit dans SecurityConfig#authProvider();
+    // utilise la config definit dans SecurityConfig#authProvider();
     Authentication auth =
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 
-    jwtService.generateToken();
-    return auth.isAuthenticated() ? "Success" : "Fail";
+    return auth.isAuthenticated() ? jwtService.generateToken(user.getUsername()) : "Fail";
   }
 }

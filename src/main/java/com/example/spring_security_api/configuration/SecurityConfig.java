@@ -1,5 +1,6 @@
 package com.example.spring_security_api.configuration;
 
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,17 +17,17 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-
-import java.util.List;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
   @Autowired private UserDetailsService userDetailsService;
+
+  @Autowired private JwtFilter jwtFilter;
 
   /**
    * Par défaut si je ne met pas cette configuration je peux accéder au form localhost:8080 , une
@@ -41,14 +42,20 @@ public class SecurityConfig {
     http.csrf(AbstractHttpConfigurer::disable);
     http.authorizeHttpRequests(
         request ->
-            request.requestMatchers("/users/register", "/users/login").permitAll().anyRequest().authenticated());
+            request
+                .requestMatchers("/users/register", "/users/login")
+                .permitAll()
+                .anyRequest()
+                .authenticated());
     // nav response formulaire
     http.formLogin(Customizer.withDefaults());
     // Rest client response (postman)
     http.httpBasic(Customizer.withDefaults());
     // Pour ne gérer aucun état -> requier une authentification à chaque requete
     http.sessionManagement(
-        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        // cette ligne active l'authentification par JWT et vérifie le token à chaque requete
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
     return http.build();
   }
 
